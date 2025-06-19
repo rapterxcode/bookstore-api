@@ -386,10 +386,14 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`================================================================================`);
+  console.log(`Developed by Phone : https://github.com/rapterxcode/bookstore-api`);
+  console.log(`================================================================================`);
+
   console.log(`Server running on port ${PORT}`);
   console.log(`Book API is ready at http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/`);
+  console.log(`================================================================================`);
 });
 
 process.on('SIGTERM', () => {
