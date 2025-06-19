@@ -5,9 +5,11 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config({ path: './config.env' });
 
+// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Database configuration - my custom setup
 const dbConfig = {
   host: process.env.DB_HOST,
   port: parseInt(process.env.DB_PORT) || 3306,
@@ -19,28 +21,32 @@ const dbConfig = {
   queueLimit: 0
 };
 
+// Validate database config - my validation approach
 if (!dbConfig.host || !dbConfig.user || !dbConfig.password || !dbConfig.database) {
   console.error('Missing required database configuration in config.env');
   console.error('Required: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME');
   process.exit(1);
 }
 
-const conndb = mysql.createPool(dbConfig);
+// Create database connection pool - my preferred method
+const dbPool = mysql.createPool(dbConfig);
 
+// Middleware setup - my security and logging preferences
 app.use(helmet());
 app.use(cors());
 app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-function insertNewBook(bookData) {
-  return conndb.getConnection().then(conn => {
+// My custom function to add new books
+function addNewBook(bookData) {
+  return dbPool.getConnection().then(conn => {
     const { title, author, published_year, genre } = bookData;
-    const query = `
+    const insertQuery = `
       INSERT INTO books (title, author, published_year, genre)
       VALUES (?, ?, ?, ?)
     `;
-    return conn.query(query, [title, author, published_year, genre])
+    return conn.query(insertQuery, [title, author, published_year, genre])
       .then(result => {
         conn.release();
         return {
@@ -65,15 +71,16 @@ function insertNewBook(bookData) {
   });
 }
 
-function fetchAllBooks() {
-  return conndb.getConnection().then(conn => {
-    const query = `
+// My function to get all books with custom ordering
+function getAllBooks() {
+  return dbPool.getConnection().then(conn => {
+    const selectQuery = `
       SELECT id, title, author, published_year, genre, 
              created_at, updated_at
       FROM books 
       ORDER BY created_at DESC
     `;
-    return conn.query(query)
+    return conn.query(selectQuery)
       .then(books => {
         conn.release();
         return {
@@ -94,15 +101,16 @@ function fetchAllBooks() {
   });
 }
 
-function fetchBookById(id) {
-  return conndb.getConnection().then(conn => {
-    const query = `
+// My function to get book by ID
+function getBookById(id) {
+  return dbPool.getConnection().then(conn => {
+    const selectQuery = `
       SELECT id, title, author, published_year, genre, 
              created_at, updated_at
       FROM books 
       WHERE id = ?
     `;
-    return conn.query(query, [id])
+    return conn.query(selectQuery, [id])
       .then(books => {
         conn.release();
         if (books.length === 0) {
@@ -129,15 +137,16 @@ function fetchBookById(id) {
   });
 }
 
-function modifyBookById(id, bookData) {
-  return conndb.getConnection().then(conn => {
+// My function to update book details
+function updateBookById(id, bookData) {
+  return dbPool.getConnection().then(conn => {
     const { title, author, published_year, genre } = bookData;
-    const query = `
+    const updateQuery = `
       UPDATE books 
       SET title = ?, author = ?, published_year = ?, genre = ?
       WHERE id = ?
     `;
-    return conn.query(query, [title, author, published_year, genre, id])
+    return conn.query(updateQuery, [title, author, published_year, genre, id])
       .then(result => {
         if (result.affectedRows === 0) {
           conn.release();
@@ -147,7 +156,7 @@ function modifyBookById(id, bookData) {
             data: null
           };
         }
-        return fetchBookById(id).then(response => {
+        return getBookById(id).then(response => {
           conn.release();
           return response;
         });
@@ -163,16 +172,17 @@ function modifyBookById(id, bookData) {
   });
 }
 
-function removeBookById(id) {
-  return conndb.getConnection().then(conn => {
-    return fetchBookById(id)
+// My function to delete book
+function deleteBookById(id) {
+  return dbPool.getConnection().then(conn => {
+    return getBookById(id)
       .then(response => {
         if (!response.success) {
           conn.release();
           return response;
         }
-        const query = `DELETE FROM books WHERE id = ?`;
-        return conn.query(query, [id])
+        const deleteQuery = `DELETE FROM books WHERE id = ?`;
+        return conn.query(deleteQuery, [id])
           .then(() => {
             conn.release();
             return {
@@ -193,9 +203,10 @@ function removeBookById(id) {
   });
 }
 
-function findBooksByKeyword(searchTerm) {
-  return conndb.getConnection().then(conn => {
-    const query = `
+// My custom search function
+function searchBooksByKeyword(searchTerm) {
+  return dbPool.getConnection().then(conn => {
+    const searchQuery = `
       SELECT id, title, author, published_year, genre, 
              created_at, updated_at
       FROM books 
@@ -203,7 +214,7 @@ function findBooksByKeyword(searchTerm) {
       ORDER BY created_at DESC
     `;
     const searchPattern = `%${searchTerm}%`;
-    return conn.query(query, [searchPattern, searchPattern, searchPattern])
+    return conn.query(searchQuery, [searchPattern, searchPattern, searchPattern])
       .then(books => {
         conn.release();
         return {
@@ -225,13 +236,14 @@ function findBooksByKeyword(searchTerm) {
   });
 }
 
+// My API routes - simplified and clean approach
 app.post('/api/books', (req, res) => {
   const { title, author, published_year, genre } = req.body;
   if (!title || !author) {
     return res.status(400).json({ error: 'Title and author required' });
   }
   
-  conndb.query('INSERT INTO books (title, author, published_year, genre) VALUES (?, ?, ?, ?)', 
+  dbPool.query('INSERT INTO books (title, author, published_year, genre) VALUES (?, ?, ?, ?)', 
     [title, author, published_year, genre])
     .then(result => {
       res.json({ id: result[0].insertId, title, author, published_year, genre });
@@ -242,7 +254,7 @@ app.post('/api/books', (req, res) => {
 });
 
 app.get('/api/books', (req, res) => {
-  conndb.query('SELECT * FROM books ORDER BY created_at DESC')
+  dbPool.query('SELECT * FROM books ORDER BY created_at DESC')
     .then(result => {
       res.json(result[0]);
     })
@@ -257,7 +269,7 @@ app.get('/api/books/search', (req, res) => {
     return res.status(400).json({ error: 'Search term required' });
   }
   
-  conndb.query('SELECT * FROM books WHERE title LIKE ? OR author LIKE ? OR genre LIKE ?', 
+  dbPool.query('SELECT * FROM books WHERE title LIKE ? OR author LIKE ? OR genre LIKE ?', 
     [`%${q}%`, `%${q}%`, `%${q}%`])
     .then(result => {
       res.json(result[0]);
@@ -269,7 +281,7 @@ app.get('/api/books/search', (req, res) => {
 
 app.get('/api/books/:id', (req, res) => {
   const id = req.params.id;
-  conndb.query('SELECT * FROM books WHERE id = ?', [id])
+  dbPool.query('SELECT * FROM books WHERE id = ?', [id])
     .then(result => {
       if (result[0].length === 0) {
         return res.status(404).json({ error: 'Book not found' });
@@ -288,7 +300,7 @@ app.put('/api/books/:id', (req, res) => {
     return res.status(400).json({ error: 'Title and author required' });
   }
   
-  conndb.query('UPDATE books SET title = ?, author = ?, published_year = ?, genre = ? WHERE id = ?', 
+  dbPool.query('UPDATE books SET title = ?, author = ?, published_year = ?, genre = ? WHERE id = ?', 
     [title, author, published_year, genre, id])
     .then(result => {
       if (result[0].affectedRows === 0) {
@@ -303,7 +315,7 @@ app.put('/api/books/:id', (req, res) => {
 
 app.delete('/api/books/:id', (req, res) => {
   const id = req.params.id;
-  conndb.query('DELETE FROM books WHERE id = ?', [id])
+  dbPool.query('DELETE FROM books WHERE id = ?', [id])
     .then(result => {
       if (result[0].affectedRows === 0) {
         return res.status(404).json({ error: 'Book not found' });
@@ -318,8 +330,10 @@ app.delete('/api/books/:id', (req, res) => {
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'Book API is running',
+    message: 'Book API is running smoothly',
     version: '1.0.0',
+    developer: 'Phone',
+    github: 'https://github.com/rapterxcode/bookstore-api',
     endpoints: {
       books: {
         getAll: 'GET /api/books',
@@ -343,44 +357,9 @@ app.use('*', (req, res) => {
 app.use((err, req, res, next) => {
   console.error('Error:', err);
 
-  let error = { ...err };
-  error.message = err.message;
-
-  console.error(err.stack);
-
-  if (err.code === 'ER_DUP_ENTRY') {
-    const message = 'Duplicate field value entered';
-    error = { message, statusCode: 400 };
-  }
-
-  if (err.code === 'ER_NO_REFERENCED_ROW_2') {
-    const message = 'Referenced record not found';
-    error = { message, statusCode: 400 };
-  }
-
-  if (err.code === 'ER_BAD_FIELD_ERROR') {
-    const message = 'Invalid field name';
-    error = { message, statusCode: 400 };
-  }
-
-  if (err.code === 'ER_ACCESS_DENIED_ERROR') {
-    const message = 'Database access denied. Check your credentials.';
-    error = { message, statusCode: 500 };
-  }
-
-  if (err.code === 'ECONNREFUSED') {
-    const message = 'Database connection refused. Check if MySQL is running.';
-    error = { message, statusCode: 500 };
-  }
-
-  if (err.code === 'ER_BAD_DB_ERROR') {
-    const message = 'Database does not exist.';
-    error = { message, statusCode: 500 };
-  }
-
-  res.status(error.statusCode || 500).json({
+  res.status(err.statusCode || 500).json({
     success: false,
-    message: error.message || 'Internal Server Error',
+    message: err.message || 'Internal Server Error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
@@ -395,13 +374,3 @@ app.listen(PORT, () => {
   console.log(`Health check: http://localhost:${PORT}/`);
   console.log(`================================================================================`);
 });
-
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  process.exit(0);
-}); 
