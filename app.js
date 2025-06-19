@@ -5,11 +5,9 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config({ path: './config.env' });
 
-// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Database configuration - my custom setup
 const dbConfig = {
   host: process.env.DB_HOST,
   port: parseInt(process.env.DB_PORT) || 3306,
@@ -21,24 +19,20 @@ const dbConfig = {
   queueLimit: 0
 };
 
-// Validate database config - my validation approach
 if (!dbConfig.host || !dbConfig.user || !dbConfig.password || !dbConfig.database) {
   console.error('Missing required database configuration in config.env');
   console.error('Required: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME');
   process.exit(1);
 }
 
-// Create database connection pool - my preferred method
 const dbPool = mysql.createPool(dbConfig);
 
-// Middleware setup - my security and logging preferences
 app.use(helmet());
 app.use(cors());
 app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// My custom function to add new books
 function addNewBook(bookData) {
   return dbPool.getConnection().then(conn => {
     const { title, author, published_year, genre } = bookData;
@@ -71,7 +65,6 @@ function addNewBook(bookData) {
   });
 }
 
-// My function to get all books with custom ordering
 function getAllBooks() {
   return dbPool.getConnection().then(conn => {
     const selectQuery = `
@@ -101,7 +94,6 @@ function getAllBooks() {
   });
 }
 
-// My function to get book by ID
 function getBookById(id) {
   return dbPool.getConnection().then(conn => {
     const selectQuery = `
@@ -137,7 +129,6 @@ function getBookById(id) {
   });
 }
 
-// My function to update book details
 function updateBookById(id, bookData) {
   return dbPool.getConnection().then(conn => {
     const { title, author, published_year, genre } = bookData;
@@ -172,7 +163,6 @@ function updateBookById(id, bookData) {
   });
 }
 
-// My function to delete book
 function deleteBookById(id) {
   return dbPool.getConnection().then(conn => {
     return getBookById(id)
@@ -203,7 +193,6 @@ function deleteBookById(id) {
   });
 }
 
-// My custom search function
 function searchBooksByKeyword(searchTerm) {
   return dbPool.getConnection().then(conn => {
     const searchQuery = `
@@ -236,7 +225,6 @@ function searchBooksByKeyword(searchTerm) {
   });
 }
 
-// My API routes - simplified and clean approach
 app.post('/api/books', (req, res) => {
   const { title, author, published_year, genre } = req.body;
   if (!title || !author) {
@@ -341,7 +329,7 @@ app.get('/', (req, res) => {
         create: 'POST /api/books',
         update: 'PUT /api/books/:id',
         delete: 'DELETE /api/books/:id',
-        search: 'GET /api/books/search?q=search_term'
+        search: 'GET /api/books/search?q=BookName'
       }
     }
   });
