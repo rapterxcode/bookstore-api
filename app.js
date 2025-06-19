@@ -317,17 +317,12 @@ app.delete('/api/books/:id', (req, res) => {
     });
 });
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK' });
-});
-
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Book API is running',
     version: '1.0.0',
     endpoints: {
-      health: 'GET /health',
       books: {
         getAll: 'GET /api/books',
         getById: 'GET /api/books/:id',
@@ -395,7 +390,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Book API is ready at http://localhost:${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`Health check: http://localhost:${PORT}/`);
 });
 
 process.on('SIGTERM', () => {
