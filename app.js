@@ -16,9 +16,7 @@ const dbConfig = {
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0,
-  acquireTimeout: 60000,
-  timeout: 60000
+  queueLimit: 0
 };
 
 if (!dbConfig.host || !dbConfig.user || !dbConfig.password || !dbConfig.database) {
@@ -388,6 +386,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
   console.log(`Server running on port ${PORT}`);
   console.log(`Book API is ready at http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/`);
