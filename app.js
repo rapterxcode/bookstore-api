@@ -33,168 +33,170 @@ app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-function addNewBook(bookData) {
-  return dbPool.getConnection().then(conn => {
+async function addNewBook(bookData) {
+  let conn;
+  try {
+    conn = await dbPool.getConnection();
     const { title, author, published_year, genre } = bookData;
     const insertQuery = `
       INSERT INTO books (title, author, published_year, genre)
       VALUES (?, ?, ?, ?)
     `;
-    return conn.query(insertQuery, [title, author, published_year, genre])
-      .then(result => {
-        conn.release();
-        return {
-          success: true,
-          message: 'Book created successfully',
-          data: {
-            id: result.insertId,
-            ...bookData,
-            created_at: new Date(),
-            updated_at: new Date()
-          }
-        };
-      })
-      .catch(err => {
-        conn.release();
-        return {
-          success: false,
-          message: 'Error creating book',
-          error: err.message
-        };
-      });
-  });
+    const [result] = await conn.query(insertQuery, [title, author, published_year, genre]);
+    
+    return {
+      success: true,
+      message: 'Book created successfully',
+      data: {
+        id: result.insertId,
+        ...bookData,
+        created_at: new Date(),
+        updated_at: new Date()
+      }
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: 'Error creating book',
+      error: err.message
+    };
+  } finally {
+    if (conn) conn.release();
+  }
 }
 
-function getAllBooks() {
-  return dbPool.getConnection().then(conn => {
+async function getAllBooks() {
+  let conn;
+  try {
+    conn = await dbPool.getConnection();
     const selectQuery = `
       SELECT id, title, author, published_year, genre, 
              created_at, updated_at
       FROM books 
       ORDER BY created_at DESC
     `;
-    return conn.query(selectQuery)
-      .then(books => {
-        conn.release();
-        return {
-          success: true,
-          message: 'Books retrieved successfully',
-          count: books.length,
-          data: books
-        };
-      })
-      .catch(err => {
-        conn.release();
-        return {
-          success: false,
-          message: 'Error fetching books',
-          error: err.message
-        };
-      });
-  });
+    const [books] = await conn.query(selectQuery);
+    
+    return {
+      success: true,
+      message: 'Books retrieved successfully',
+      count: books.length,
+      data: books
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: 'Error fetching books',
+      error: err.message
+    };
+  } finally {
+    if (conn) conn.release();
+  }
 }
 
-function getBookById(id) {
-  return dbPool.getConnection().then(conn => {
+async function getBookById(id) {
+  let conn;
+  try {
+    conn = await dbPool.getConnection();
     const selectQuery = `
       SELECT id, title, author, published_year, genre, 
              created_at, updated_at
       FROM books 
       WHERE id = ?
     `;
-    return conn.query(selectQuery, [id])
-      .then(books => {
-        conn.release();
-        if (books.length === 0) {
-          return {
-            success: false,
-            message: 'Book not found',
-            data: null
-          };
-        }
-        return {
-          success: true,
-          message: 'Book retrieved successfully',
-          data: books[0]
-        };
-      })
-      .catch(err => {
-        conn.release();
-        return {
-          success: false,
-          message: 'Error fetching book',
-          error: err.message
-        };
-      });
-  });
+    const [books] = await conn.query(selectQuery, [id]);
+    
+    if (books.length === 0) {
+      return {
+        success: false,
+        message: 'Book not found',
+        data: null
+      };
+    }
+    
+    return {
+      success: true,
+      message: 'Book retrieved successfully',
+      data: books[0]
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: 'Error fetching book',
+      error: err.message
+    };
+  } finally {
+    if (conn) conn.release();
+  }
 }
 
-function updateBookById(id, bookData) {
-  return dbPool.getConnection().then(conn => {
+async function updateBookById(id, bookData) {
+  let conn;
+  try {
+    conn = await dbPool.getConnection();
     const { title, author, published_year, genre } = bookData;
     const updateQuery = `
       UPDATE books 
       SET title = ?, author = ?, published_year = ?, genre = ?
       WHERE id = ?
     `;
-    return conn.query(updateQuery, [title, author, published_year, genre, id])
-      .then(result => {
-        if (result.affectedRows === 0) {
-          conn.release();
-          return {
-            success: false,
-            message: 'Book not found',
-            data: null
-          };
-        }
-        return getBookById(id).then(response => {
-          conn.release();
-          return response;
-        });
-      })
-      .catch(err => {
-        conn.release();
-        return {
-          success: false,
-          message: 'Error updating book',
-          error: err.message
-        };
-      });
-  });
+    const [result] = await conn.query(updateQuery, [title, author, published_year, genre, id]);
+    
+    if (result.affectedRows === 0) {
+      return {
+        success: false,
+        message: 'Book not found',
+        data: null
+      };
+    }
+    
+    // Get the updated book data
+    return await getBookById(id);
+  } catch (err) {
+    return {
+      success: false,
+      message: 'Error updating book',
+      error: err.message
+    };
+  } finally {
+    if (conn) conn.release();
+  }
 }
 
-function deleteBookById(id) {
-  return dbPool.getConnection().then(conn => {
-    return getBookById(id)
-      .then(response => {
-        if (!response.success) {
-          conn.release();
-          return response;
-        }
-        const deleteQuery = `DELETE FROM books WHERE id = ?`;
-        return conn.query(deleteQuery, [id])
-          .then(() => {
-            conn.release();
-            return {
-              success: true,
-              message: 'Book deleted successfully',
-              data: response.data
-            };
-          });
-      })
-      .catch(err => {
-        conn.release();
-        return {
-          success: false,
-          message: 'Error deleting book',
-          error: err.message
-        };
-      });
-  });
+async function deleteBookById(id) {
+  let conn;
+  try {
+    conn = await dbPool.getConnection();
+    
+    // First check if book exists
+    const bookResponse = await getBookById(id);
+    if (!bookResponse.success) {
+      return bookResponse;
+    }
+    
+    const deleteQuery = `DELETE FROM books WHERE id = ?`;
+    await conn.query(deleteQuery, [id]);
+    
+    return {
+      success: true,
+      message: 'Book deleted successfully',
+      data: bookResponse.data
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: 'Error deleting book',
+      error: err.message
+    };
+  } finally {
+    if (conn) conn.release();
+  }
 }
 
-function searchBooksByKeyword(searchTerm) {
-  return dbPool.getConnection().then(conn => {
+async function searchBooksByKeyword(searchTerm) {
+  let conn;
+  try {
+    conn = await dbPool.getConnection();
     const searchQuery = `
       SELECT id, title, author, published_year, genre, 
              created_at, updated_at
@@ -203,116 +205,128 @@ function searchBooksByKeyword(searchTerm) {
       ORDER BY created_at DESC
     `;
     const searchPattern = `%${searchTerm}%`;
-    return conn.query(searchQuery, [searchPattern, searchPattern, searchPattern])
-      .then(books => {
-        conn.release();
-        return {
-          success: true,
-          message: 'Search completed successfully',
-          count: books.length,
-          searchTerm: searchTerm,
-          data: books
-        };
-      })
-      .catch(err => {
-        conn.release();
-        return {
-          success: false,
-          message: 'Error searching books',
-          error: err.message
-        };
-      });
-  });
+    const [books] = await conn.query(searchQuery, [searchPattern, searchPattern, searchPattern]);
+    
+    return {
+      success: true,
+      message: 'Search completed successfully',
+      count: books.length,
+      searchTerm: searchTerm,
+      data: books
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: 'Error searching books',
+      error: err.message
+    };
+  } finally {
+    if (conn) conn.release();
+  }
 }
 
-app.post('/api/books', (req, res) => {
-  const { title, author, published_year, genre } = req.body;
-  if (!title || !author) {
-    return res.status(400).json({ error: 'Title and author required' });
+app.post('/api/books', async (req, res) => {
+  try {
+    const { title, author, published_year, genre } = req.body;
+    if (!title || !author) {
+      return res.status(400).json({ error: 'Title and author required' });
+    }
+    
+    const result = await addNewBook({ title, author, published_year, genre });
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  
-  dbPool.query('INSERT INTO books (title, author, published_year, genre) VALUES (?, ?, ?, ?)', 
-    [title, author, published_year, genre])
-    .then(result => {
-      res.json({ id: result[0].insertId, title, author, published_year, genre });
-    })
-    .catch(err => {
-      res.status(500).json({ error: err.message });
-    });
 });
 
-app.get('/api/books', (req, res) => {
-  dbPool.query('SELECT * FROM books ORDER BY created_at DESC')
-    .then(result => {
-      res.json(result[0]);
-    })
-    .catch(err => {
-      res.status(500).json({ error: err.message });
-    });
-});
-
-app.get('/api/books/search', (req, res) => {
-  const q = req.query.q;
-  if (!q) {
-    return res.status(400).json({ error: 'Search term required' });
+app.get('/api/books', async (req, res) => {
+  try {
+    const result = await getAllBooks();
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  
-  dbPool.query('SELECT * FROM books WHERE title LIKE ? OR author LIKE ? OR genre LIKE ?', 
-    [`%${q}%`, `%${q}%`, `%${q}%`])
-    .then(result => {
-      res.json(result[0]);
-    })
-    .catch(err => {
-      res.status(500).json({ error: err.message });
-    });
 });
 
-app.get('/api/books/:id', (req, res) => {
-  const id = req.params.id;
-  dbPool.query('SELECT * FROM books WHERE id = ?', [id])
-    .then(result => {
-      if (result[0].length === 0) {
-        return res.status(404).json({ error: 'Book not found' });
-      }
-      res.json(result[0][0]);
-    })
-    .catch(err => {
-      res.status(500).json({ error: err.message });
-    });
-});
-
-app.put('/api/books/:id', (req, res) => {
-  const id = req.params.id;
-  const { title, author, published_year, genre } = req.body;
-  if (!title || !author) {
-    return res.status(400).json({ error: 'Title and author required' });
+app.get('/api/books/search', async (req, res) => {
+  try {
+    const q = req.query.q;
+    if (!q) {
+      return res.status(400).json({ error: 'Search term required' });
+    }
+    
+    const result = await searchBooksByKeyword(q);
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  
-  dbPool.query('UPDATE books SET title = ?, author = ?, published_year = ?, genre = ? WHERE id = ?', 
-    [title, author, published_year, genre, id])
-    .then(result => {
-      if (result[0].affectedRows === 0) {
-        return res.status(404).json({ error: 'Book not found' });
-      }
-      res.json({ id, title, author, published_year, genre });
-    })
-    .catch(err => {
-      res.status(500).json({ error: err.message });
-    });
 });
 
-app.delete('/api/books/:id', (req, res) => {
-  const id = req.params.id;
-  dbPool.query('DELETE FROM books WHERE id = ?', [id])
-    .then(result => {
-      if (result[0].affectedRows === 0) {
-        return res.status(404).json({ error: 'Book not found' });
-      }
+app.get('/api/books/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await getBookById(id);
+    
+    if (result.success) {
+      res.json(result.data);
+    } else if (result.message === 'Book not found') {
+      res.status(404).json({ error: 'Book not found' });
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/books/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { title, author, published_year, genre } = req.body;
+    if (!title || !author) {
+      return res.status(400).json({ error: 'Title and author required' });
+    }
+    
+    const result = await updateBookById(id, { title, author, published_year, genre });
+    if (result.success) {
+      res.json(result.data);
+    } else if (result.message === 'Book not found') {
+      res.status(404).json({ error: 'Book not found' });
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/books/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await deleteBookById(id);
+    
+    if (result.success) {
       res.json({ message: 'Book deleted' });
-    })
-    .catch(err => {
-      res.status(500).json({ error: err.message });
-    });
+    } else if (result.message === 'Book not found') {
+      res.status(404).json({ error: 'Book not found' });
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/', (req, res) => {
