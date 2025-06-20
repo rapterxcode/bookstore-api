@@ -16,12 +16,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/books",
+							"raw": "{{base_url}}/books",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"books"
 							]
 						}
@@ -34,14 +33,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/books/1",
+							"raw": "{{base_url}}/books/4",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"books",
-								"1"
+								"4"
 							]
 						}
 					},
@@ -59,42 +57,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"title\": \"The Great Gatsby\",\n  \"author\": \"F. Scott Fitzgerald\",\n  \"published_year\": 1925,\n  \"genre\": \"Fiction\"\n}"
+							"raw": "{\n  \"title\": \"The Great Gatsby 2\",\n  \"author\": \"F. Scott Fitzgerald\",\n  \"published_year\": 1925,\n  \"genre\": \"Fiction\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/books",
+							"raw": "{{base_url}}/books",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
-								"books"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Book - Thai",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "{{content_type}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"title\": \"สามก๊ก2\",\n  \"author\": \"หลอกวนจง\",\n  \"published_year\": 1522,\n  \"genre\": \"ประวัติศาสตร์\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/api/books",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
 								"books"
 							]
 						}
@@ -113,15 +83,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"title\": \"The Great Gatsby (Updated)\",\n  \"author\": \"F. Scott Fitzgerald\",\n  \"published_year\": 1925,\n  \"genre\": \"Classic Fiction\"\n}"
+							"raw": "{\n  \"title\": \"Test The Great Gatsby (Updated)\",\n  \"author\": \"F. Scott Fitzgerald\",\n  \"published_year\": 1925,\n  \"genre\": \"Classic Fiction\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/books/1",
+							"raw": "{{base_url}}/books/1",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"books",
 								"1"
 							]
@@ -135,14 +104,13 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/books/10",
+							"raw": "{{base_url}}/books/2",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"books",
-								"10"
+								"2"
 							]
 						}
 					},
@@ -154,19 +122,18 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/books/search?q=Gatsby",
+							"raw": "{{base_url}}/books/search?q=The Alchemist",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
 								"books",
 								"search"
 							],
 							"query": [
 								{
 									"key": "q",
-									"value": "Gatsby"
+									"value": "The Alchemist"
 								}
 							]
 						}
@@ -174,48 +141,170 @@
 					"response": []
 				},
 				{
-					"name": "Search Books - Thai",
+					"name": "Health Check",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/books/search?q=สามก๊ก",
+							"raw": "{{base_url}}/",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"api",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Books",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/books",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Book by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/books/4",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Book",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "{{content_type}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"The Great Gatsby 2\",\n  \"author\": \"F. Scott Fitzgerald\",\n  \"published_year\": 1925,\n  \"genre\": \"Fiction\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/books",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Book",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "{{content_type}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Test The Great Gatsby (Updated)\",\n  \"author\": \"F. Scott Fitzgerald\",\n  \"published_year\": 1925,\n  \"genre\": \"Classic Fiction\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/books/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Book",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/books/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Books",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/books/search?q=The Alchemist",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
 								"books",
 								"search"
 							],
 							"query": [
 								{
 									"key": "q",
-									"value": "สามก๊ก"
+									"value": "The Alchemist"
 								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								""
 							]
 						}
 					},
 					"response": []
 				}
 			]
-		},
-		{
-			"name": "Health Check",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{base_url}}/",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						""
-					]
-				}
-			},
-			"response": []
 		}
 	],
 	"variable": [
