@@ -225,7 +225,7 @@ async function searchBooksByKeyword(searchTerm) {
   }
 }
 
-app.post('/api/books', async (req, res) => {
+app.post('/books', async (req, res) => {
   try {
     const { title, author, published_year, genre } = req.body;
     if (!title || !author) {
@@ -243,7 +243,7 @@ app.post('/api/books', async (req, res) => {
   }
 });
 
-app.get('/api/books', async (req, res) => {
+app.get('/books', async (req, res) => {
   try {
     const result = await getAllBooks();
     if (result.success) {
@@ -256,7 +256,7 @@ app.get('/api/books', async (req, res) => {
   }
 });
 
-app.get('/api/books/search', async (req, res) => {
+app.get('/books/search', async (req, res) => {
   try {
     const q = req.query.q;
     if (!q) {
@@ -274,7 +274,7 @@ app.get('/api/books/search', async (req, res) => {
   }
 });
 
-app.get('/api/books/:id', async (req, res) => {
+app.get('/books/:id', async (req, res) => {
   try {
     const id = req.params.id;
     const result = await getBookById(id);
@@ -291,7 +291,7 @@ app.get('/api/books/:id', async (req, res) => {
   }
 });
 
-app.put('/api/books/:id', async (req, res) => {
+app.put('/books/:id', async (req, res) => {
   try {
     const id = req.params.id;
     const { title, author, published_year, genre } = req.body;
@@ -312,7 +312,7 @@ app.put('/api/books/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/books/:id', async (req, res) => {
+app.delete('/books/:id', async (req, res) => {
   try {
     const id = req.params.id;
     const result = await deleteBookById(id);
@@ -338,12 +338,12 @@ app.get('/', (req, res) => {
     github: 'https://github.com/rapterxcode/bookstore-api',
     endpoints: {
       books: {
-        getAll: 'GET /api/books',
-        getById: 'GET /api/books/:id',
-        create: 'POST /api/books',
-        update: 'PUT /api/books/:id',
-        delete: 'DELETE /api/books/:id',
-        search: 'GET /api/books/search?q=BookName'
+        getAll: 'GET /books',
+        getById: 'GET /books/:id',
+        create: 'POST /books',
+        update: 'PUT /books/:id',
+        delete: 'DELETE /books/:id',
+        search: 'GET /books/search?q=BookName'
       }
     }
   });
